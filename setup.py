@@ -14,12 +14,16 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
-# Read requirements from requirements.txt
-# This ensures setup.py and requirements.txt stay in sync
-with open(os.path.join(this_directory, "requirements.txt"), encoding="utf-8") as f:
-    requirements = [
-        line.strip() for line in f if line.strip() and not line.startswith("#")
-    ]
+# Core dependencies required for basic functionality
+# OCR backends (pytesseract and easyocr) are optional - at least one is needed for the tool to work
+# Users should install at least one OCR backend via extras_require (see below)
+requirements = [
+    "Pillow",  # For image capture and processing
+    "pynput",  # For mouse control and cursor position
+    "rapidfuzz",  # For fuzzy text matching
+    "imagehash",  # For duplicate image detection
+    "numpy",  # For image processing operations
+]
 
 setup(
     name="autopassad",
@@ -34,10 +38,17 @@ setup(
     py_modules=["autopassad"],
     python_requires=">=3.13",
     install_requires=requirements,
-    # EasyOCR is optional - provides better accuracy but not required
-    # Install with: pip install autopassad[easyocr]
+    # At least one OCR backend must be installed for the tool to function
+    # pytesseract: Faster, lighter weight, requires tesseract binary to be installed separately
+    # easyocr: More accurate, GPU-accelerated, but heavier dependencies
+    # Install options:
+    #   pip install autopassad[pytesseract]  # Use pytesseract
+    #   pip install autopassad[easyocr]      # Use easyocr  
+    #   pip install autopassad[all]          # Install both (recommended)
     extras_require={
+        "pytesseract": ["pytesseract"],
         "easyocr": ["easyocr"],
+        "all": ["pytesseract", "easyocr"],
     },
     # Create console script entry point for easy command-line access
     # After installation, users can run: autopassad --help
