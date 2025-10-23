@@ -17,6 +17,7 @@ from collections import deque
 # This allows the tool to fall back to pytesseract gracefully
 try:
     import easyocr
+
     EASYOCR_AVAILABLE = True
 except ImportError:
     EASYOCR_AVAILABLE = False
@@ -174,7 +175,7 @@ class AutoPassAd:
             # Use Tesseract (either as fallback or if EasyOCR was disabled)
             # Lazy import pytesseract only when needed (when easyocr is not available or fails)
             import pytesseract
-            
+
             # Try optimized config first (legacy engine is faster)
             # --psm 7: Single line of text (faster than block analysis)
             # --oem 0: Legacy engine (significantly faster than LSTM)
