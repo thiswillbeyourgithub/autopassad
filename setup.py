@@ -32,7 +32,7 @@ setup(
     license="GPL-v3",
     # Use py_modules since this is a single-file module, not a package
     py_modules=["autopassad"],
-    python_requires=">=3.7",
+    python_requires=">=3.13",
     install_requires=requirements,
     # EasyOCR is optional - provides better accuracy but not required
     # Install with: pip install autopassad[easyocr]
