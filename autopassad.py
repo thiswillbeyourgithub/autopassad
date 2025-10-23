@@ -54,6 +54,8 @@ class AutoPassAd:
         # Only enable easyocr if it's available
         self.use_easyocr = EASYOCR_AVAILABLE
         self.easyocr_reader = None  # Lazy initialization on first use
+        # Track if Tesseract legacy engine is available (avoids repeated failed attempts)
+        self.tesseract_legacy_available = True
         # Store last 3 image hashes for duplicate detection (deque provides O(1) operations)
         self.recent_image_hashes = deque(maxlen=3)
 
@@ -176,37 +178,46 @@ class AutoPassAd:
             # Lazy import pytesseract only when needed (when easyocr is not available or fails)
             import pytesseract
 
-            # Try optimized config first (legacy engine is faster)
-            # --psm 7: Single line of text (faster than block analysis)
-            # --oem 0: Legacy engine (significantly faster than LSTM)
-            # -c tessedit_char_whitelist: Only recognize alphabetic characters
-            config = "--psm 7 --oem 0 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            # Determine config based on whether legacy engine is available
+            # Legacy engine (--oem 0) is faster but may not be installed
+            # Once we detect it's not available, we skip trying it on future calls
+            if self.tesseract_legacy_available:
+                # Try optimized config with legacy engine (faster)
+                # --psm 7: Single line of text (faster than block analysis)
+                # --oem 0: Legacy engine (significantly faster than LSTM)
+                # -c tessedit_char_whitelist: Only recognize alphabetic characters
+                config = "--psm 7 --oem 0 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-            try:
-                text = pytesseract.image_to_string(image, config=config)
-                ocr_time = time.time() - ocr_start
-                if self.verbose:
-                    print(f"  OCR time (Tesseract): {ocr_time * 1000:.2f}ms")
-                return text.strip(), current_hash
-            except Exception as legacy_error:
-                # If legacy engine fails (not installed), fall back to default Tesseract engine
-                if (
-                    "legacy" in str(legacy_error).lower()
-                    or "oem" in str(legacy_error).lower()
-                ):
-                    print(
-                        "Tesseract legacy engine not available, using default engine..."
-                    )
-                    # Fallback config without --oem 0 (uses default engine)
-                    fallback_config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                    text = pytesseract.image_to_string(image, config=fallback_config)
+                try:
+                    text = pytesseract.image_to_string(image, config=config)
                     ocr_time = time.time() - ocr_start
                     if self.verbose:
-                        print(f"  OCR time (Tesseract): {ocr_time * 1000:.2f}ms")
+                        print(f"  OCR time (Tesseract legacy): {ocr_time * 1000:.2f}ms")
                     return text.strip(), current_hash
-                else:
-                    # Re-raise if it's a different error
-                    raise
+                except Exception as legacy_error:
+                    # If legacy engine fails (not installed), fall back to default Tesseract engine
+                    if (
+                        "legacy" in str(legacy_error).lower()
+                        or "oem" in str(legacy_error).lower()
+                    ):
+                        print(
+                            "Tesseract legacy engine not available, using default engine..."
+                        )
+                        # Permanently switch to default engine for all future calls
+                        self.tesseract_legacy_available = False
+                        # Continue to default config below
+                    else:
+                        # Re-raise if it's a different error
+                        raise
+
+            # Use default Tesseract config (either as fallback or if legacy was disabled)
+            # Fallback config without --oem 0 (uses default engine)
+            fallback_config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            text = pytesseract.image_to_string(image, config=fallback_config)
+            ocr_time = time.time() - ocr_start
+            if self.verbose:
+                print(f"  OCR time (Tesseract default): {ocr_time * 1000:.2f}ms")
+            return text.strip(), current_hash
         except Exception as e:
             print(f"Error extracting text: {e}")
             return "", None
