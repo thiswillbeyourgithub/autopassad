@@ -18,7 +18,7 @@ A (hopefully) cross-platform Python script that automatically detects "continue"
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.13+ (probably works on older versions but more recent python versions are faster)
 - Tesseract OCR engine (required)
 - EasyOCR (optional but recommended for better accuracy and GPU acceleration)
 
