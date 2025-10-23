@@ -1,6 +1,6 @@
 # AutoPassAd
 
-A cross-platform Python script that automatically detects "continue" text on screen and simulates mouse clicks.
+A (hopefully) cross-platform Python script that automatically detects "continue" text on screen and simulates mouse clicks.
 
 ## Features
 
@@ -8,7 +8,7 @@ A cross-platform Python script that automatically detects "continue" text on scr
 - Uses OCR to extract text from screenshots
 - Fuzzy text matching to detect "continue" text
 - Automatic mouse clicking when text is found
-- Cross-platform support (Linux, macOS, Windows)
+- Cross-platform support (tested on Linux and macOS, not on Windows)
 - Configurable parameters via command line
 
 ## Requirements
