@@ -72,10 +72,10 @@ class AutoPassAd:
         half_vertical = vertical_size // 2
         half_horizontal = horizontal_size // 2
 
-        left = max(0, x - half_horizontal)
-        top = max(0, y - half_vertical)
-        right = x + half_horizontal
-        bottom = y + half_vertical
+        left = int(max(0, x - half_horizontal))
+        top = int(max(0, y - half_vertical))
+        right = int(x + half_horizontal)
+        bottom = int(y + half_vertical)
 
         # Capture screenshot of the region
         screenshot = ImageGrab.grab(bbox=(left, top, right, bottom))
