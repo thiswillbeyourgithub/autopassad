@@ -9,11 +9,19 @@ import argparse
 import sys
 from PIL import Image, ImageGrab
 from pynput import mouse
-import pytesseract
-import easyocr
 from rapidfuzz import fuzz
 import imagehash
 from collections import deque
+
+# Try to import easyocr, but don't crash if it's not available
+# This allows the tool to fall back to pytesseract gracefully
+try:
+    import easyocr
+    EASYOCR_AVAILABLE = True
+except ImportError:
+    EASYOCR_AVAILABLE = False
+    easyocr = None
+    print("Warning: easyocr not available, will use pytesseract only")
 
 
 class AutoPassAd:
@@ -42,7 +50,8 @@ class AutoPassAd:
         self.mouse_controller = mouse.Controller()
         self.verbose = verbose
         # Track which OCR engine to use (try easyocr first, fall back to tesseract if needed)
-        self.use_easyocr = True
+        # Only enable easyocr if it's available
+        self.use_easyocr = EASYOCR_AVAILABLE
         self.easyocr_reader = None  # Lazy initialization on first use
         # Store last 3 image hashes for duplicate detection (deque provides O(1) operations)
         self.recent_image_hashes = deque(maxlen=3)
@@ -163,6 +172,9 @@ class AutoPassAd:
                     # Continue to Tesseract below
 
             # Use Tesseract (either as fallback or if EasyOCR was disabled)
+            # Lazy import pytesseract only when needed (when easyocr is not available or fails)
+            import pytesseract
+            
             # Try optimized config first (legacy engine is faster)
             # --psm 7: Single line of text (faster than block analysis)
             # --oem 0: Legacy engine (significantly faster than LSTM)
