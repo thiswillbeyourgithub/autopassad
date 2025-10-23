@@ -27,10 +27,9 @@ setup(
     description='Automatically detect "continue" text on screen and simulate mouse clicks',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="TODO",
-    author_email="TODO",
-    url="TODO",
-    license="MIT",
+    author="fPHeQk7",
+    url="https://github.com/thiswillbeyourgithub/autopassad",
+    license="GPL-v3",
     # Use py_modules since this is a single-file module, not a package
     py_modules=["autopassad"],
     python_requires=">=3.7",
