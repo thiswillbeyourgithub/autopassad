@@ -134,30 +134,34 @@ class AutoPassAd:
                     if self.easyocr_reader is None:
                         # Initialize with English language, GPU if available
                         # verbose=False to suppress initialization messages
-                        self.easyocr_reader = easyocr.Reader(['en'], gpu=True, verbose=False)
-                    
+                        self.easyocr_reader = easyocr.Reader(
+                            ["en"], gpu=True, verbose=False
+                        )
+
                     # Convert PIL image to numpy array for EasyOCR
                     img_array = np.array(image)
-                    
+
                     # EasyOCR returns list of (bbox, text, confidence) tuples
                     # We only care about the text parts
                     results = self.easyocr_reader.readtext(img_array, detail=0)
-                    
+
                     # Combine all detected text into a single string
-                    text = ' '.join(results)
-                    
+                    text = " ".join(results)
+
                     ocr_time = time.time() - ocr_start
                     if self.verbose:
                         print(f"  OCR time (EasyOCR): {ocr_time * 1000:.2f}ms")
                     return text.strip(), current_hash
-                    
+
                 except Exception as easyocr_error:
                     # If EasyOCR fails (not installed, GPU issues, etc.), fall back to Tesseract
-                    print(f"EasyOCR failed ({easyocr_error}), falling back to Tesseract...")
+                    print(
+                        f"EasyOCR failed ({easyocr_error}), falling back to Tesseract..."
+                    )
                     # Permanently switch to Tesseract for all future calls
                     self.use_easyocr = False
                     # Continue to Tesseract below
-            
+
             # Use Tesseract (either as fallback or if EasyOCR was disabled)
             # Try optimized config first (legacy engine is faster)
             # --psm 7: Single line of text (faster than block analysis)
@@ -182,9 +186,7 @@ class AutoPassAd:
                     )
                     # Fallback config without --oem 0 (uses default engine)
                     fallback_config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                    text = pytesseract.image_to_string(
-                        image, config=fallback_config
-                    )
+                    text = pytesseract.image_to_string(image, config=fallback_config)
                     ocr_time = time.time() - ocr_start
                     if self.verbose:
                         print(f"  OCR time (Tesseract): {ocr_time * 1000:.2f}ms")
