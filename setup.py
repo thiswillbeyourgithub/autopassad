@@ -43,7 +43,7 @@ setup(
     # easyocr: More accurate, GPU-accelerated, but heavier dependencies
     # Install options:
     #   pip install autopassad[pytesseract]  # Use pytesseract
-    #   pip install autopassad[easyocr]      # Use easyocr  
+    #   pip install autopassad[easyocr]      # Use easyocr
     #   pip install autopassad[all]          # Install both (recommended)
     extras_require={
         "pytesseract": ["pytesseract"],
