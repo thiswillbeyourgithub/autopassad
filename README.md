@@ -2,19 +2,25 @@
 
 A (hopefully) cross-platform Python script that automatically detects "continue" text on screen and simulates mouse clicks.
 
+*This project was developed with assistance from [aider.chat](https://github.com/Aider-AI/aider/).*
+
 ## Features
 
 - Takes screenshots around mouse cursor at configurable intervals
-- Uses OCR to extract text from screenshots
+- Dual OCR engine support:
+  - EasyOCR (primary, more accurate, GPU-accelerated when available)
+  - Tesseract OCR (fallback, always available)
 - Fuzzy text matching to detect "continue" text
 - Automatic mouse clicking when text is found
 - Cross-platform support (tested on Linux and macOS, not on Windows)
 - Configurable parameters via command line
+- Performance optimizations for low CPU usage
 
 ## Requirements
 
 - Python 3.7+
-- Tesseract OCR engine
+- Tesseract OCR engine (required)
+- EasyOCR (optional but recommended for better accuracy and GPU acceleration)
 
 ## Installation
 
@@ -136,7 +142,22 @@ With your virtual environment activated:
 pip install -r requirements.txt
 ```
 
-### Step 5: Verify Installation
+### Step 5: (Optional) Install EasyOCR for Better Accuracy
+
+EasyOCR provides more accurate text recognition and can leverage GPU acceleration if available. It's optional but recommended:
+
+```bash
+pip install easyocr
+```
+
+**Note:** EasyOCR will download language models on first run (~100MB for English). If EasyOCR is not installed or fails to load, the tool will automatically fall back to using Tesseract OCR.
+
+**GPU Support:**
+- EasyOCR can use GPU acceleration if you have CUDA-compatible hardware and drivers installed
+- Without GPU, EasyOCR will still work but will be slower than Tesseract
+- The tool will automatically detect and use GPU if available
+
+### Step 6: Verify Installation
 
 Run a quick test to ensure everything is working:
 
@@ -145,6 +166,11 @@ python autopassad.py --help
 ```
 
 You should see the help message without any errors.
+
+**Check OCR Engine:**
+When you run the tool, it will print a message indicating which OCR engine is being used:
+- If EasyOCR is installed: It will use EasyOCR by default
+- If EasyOCR is not available: You'll see "Warning: easyocr not available, will use pytesseract only"
 
 ### Installation Troubleshooting
 
@@ -237,7 +263,10 @@ python autopassad.py --interval 0.5 --rect-size 50x200 --threshold 85 --target-w
    - Skips blank images (low pixel variance)
    - Detects and skips duplicate screenshots using perceptual hashing
    - Converts to grayscale and applies binary threshold for faster OCR
-3. Uses Tesseract OCR to extract text from the screenshot (with legacy engine optimization when available)
+3. Performs OCR to extract text from the screenshot:
+   - **Primary engine**: EasyOCR (more accurate, GPU-accelerated when available)
+   - **Fallback engine**: Tesseract OCR (with legacy engine optimization when available)
+   - Automatically falls back to Tesseract if EasyOCR is not installed or fails
 4. Uses rapidfuzz to check if any word matches the target word with the specified similarity threshold
 5. Simulates a mouse click if a match is found
 6. Repeats at the specified interval
@@ -248,8 +277,10 @@ The tool includes several optimizations to minimize CPU usage and improve respon
 - **Blank image detection**: Skips OCR on mostly uniform images
 - **Duplicate detection**: Uses perceptual hashing to avoid processing the same image multiple times
 - **Image preprocessing**: Converts to grayscale and applies binary threshold to simplify OCR
-- **OCR engine selection**: Uses legacy Tesseract engine (--oem 0) when available for faster processing
-- **Character whitelisting**: Limits recognition to alphabetic characters only
+- **Dual OCR engine support**: Uses EasyOCR for accuracy, falls back to Tesseract for reliability
+- **OCR engine optimization**: Uses legacy Tesseract engine (--oem 0) when available for faster processing
+- **Character whitelisting**: Limits recognition to alphabetic characters only (Tesseract)
+- **GPU acceleration**: Leverages GPU when available with EasyOCR
 
 ## Troubleshooting
 
@@ -266,10 +297,18 @@ On macOS, you may need to grant accessibility permissions:
 
 ### Low Detection Accuracy
 If the tool isn't detecting text properly:
+- Install EasyOCR for better accuracy: `pip install easyocr`
 - Increase the rectangle size with `--rect-size` (e.g., `--rect-size 100x300` for a taller/wider area)
 - Lower the similarity threshold with `--threshold`
 - Ensure the text is clear and readable in the screenshot area
 - Try enabling `--verbose` to see timing information and detected text
+
+### EasyOCR Issues
+If you encounter issues with EasyOCR:
+- The tool will automatically fall back to Tesseract
+- Check GPU drivers if you want to use GPU acceleration
+- EasyOCR requires ~100MB download for language models on first run
+- You can uninstall EasyOCR if needed: `pip uninstall easyocr`
 
 ## License
 
