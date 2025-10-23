@@ -1,4 +1,4 @@
-# Auto-Click OCR Tool
+# AutoPassAd
 
 A cross-platform Python script that automatically detects "continue" text on screen and simulates mouse clicks.
 
@@ -141,7 +141,7 @@ pip install -r requirements.txt
 Run a quick test to ensure everything is working:
 
 ```bash
-python auto_click_ocr.py --help
+python autopassad.py --help
 ```
 
 You should see the help message without any errors.
@@ -197,28 +197,28 @@ deactivate
 
 ### Basic Usage
 ```bash
-python auto_click_ocr.py
+python autopassad.py
 ```
 
 ### With Custom Parameters
 ```bash
 # Custom interval (2 seconds between screenshots)
-python auto_click_ocr.py --interval 2.0
+python autopassad.py --interval 2.0
 
 # Custom rectangle size (100px vertical x 250px horizontal around cursor)
-python auto_click_ocr.py --rect-size 100x250
+python autopassad.py --rect-size 100x250
 
 # Custom similarity threshold (90% match required)
-python auto_click_ocr.py --threshold 90
+python autopassad.py --threshold 90
 
 # Custom target word
-python auto_click_ocr.py --target-word "next"
+python autopassad.py --target-word "next"
 
 # Enable verbose output with timing information
-python auto_click_ocr.py --verbose
+python autopassad.py --verbose
 
 # All parameters combined
-python auto_click_ocr.py --interval 0.5 --rect-size 50x200 --threshold 85 --target-word "continue" --verbose
+python autopassad.py --interval 0.5 --rect-size 50x200 --threshold 85 --target-word "continue" --verbose
 ```
 
 ### Command Line Options

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Auto-Click OCR Tool
+AutoPassAd
 Takes screenshots around mouse cursor, performs OCR, and clicks when "continue" text is found.
 """
 
@@ -15,7 +15,7 @@ import imagehash
 from collections import deque
 
 
-class AutoClickOCR:
+class AutoPassAd:
     def __init__(
         self,
         interval=1.0,
@@ -25,7 +25,7 @@ class AutoClickOCR:
         verbose=False,
     ):
         """
-        Initialize the auto-click OCR tool.
+        Initialize autopassad.
 
         Args:
             interval (float): Time between screenshots in seconds
@@ -202,7 +202,7 @@ class AutoClickOCR:
 def main():
     """Main function with command-line argument parsing."""
     parser = argparse.ArgumentParser(
-        description="Auto-Click OCR Tool - Automatically click when 'continue' text is detected"
+        description="AutoPassAd - Automatically click when 'continue' text is detected"
     )
     parser.add_argument(
         "--interval",
@@ -265,7 +265,7 @@ def main():
         sys.exit(1)
 
     # Create tool with configured parameters
-    tool = AutoClickOCR(
+    tool = AutoPassAd(
         interval=args.interval,
         rect_size=rect_size,
         similarity_threshold=args.threshold,
