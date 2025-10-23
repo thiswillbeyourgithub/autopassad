@@ -115,7 +115,7 @@ class AutoPassAd:
 
             preprocess_time = time.time() - preprocess_start
             if self.verbose:
-                print(f"  Preprocessing time: {preprocess_time*1000:.2f}ms")
+                print(f"  Preprocessing time: {preprocess_time * 1000:.2f}ms")
 
             # Start timing OCR
             ocr_start = time.time()
@@ -133,7 +133,7 @@ class AutoPassAd:
                     text = pytesseract.image_to_string(image, config=config)
                     ocr_time = time.time() - ocr_start
                     if self.verbose:
-                        print(f"  OCR time: {ocr_time*1000:.2f}ms")
+                        print(f"  OCR time: {ocr_time * 1000:.2f}ms")
                     return text.strip(), current_hash
                 except Exception as legacy_error:
                     # If legacy engine fails (not installed), fall back to default engine
@@ -153,7 +153,7 @@ class AutoPassAd:
                         )
                         ocr_time = time.time() - ocr_start
                         if self.verbose:
-                            print(f"  OCR time: {ocr_time*1000:.2f}ms")
+                            print(f"  OCR time: {ocr_time * 1000:.2f}ms")
                         return text.strip(), current_hash
                     else:
                         # Re-raise if it's a different error
@@ -164,7 +164,7 @@ class AutoPassAd:
                 text = pytesseract.image_to_string(image, config=config)
                 ocr_time = time.time() - ocr_start
                 if self.verbose:
-                    print(f"  OCR time: {ocr_time*1000:.2f}ms")
+                    print(f"  OCR time: {ocr_time * 1000:.2f}ms")
                 return text.strip(), current_hash
         except Exception as e:
             print(f"Error extracting text: {e}")
@@ -184,7 +184,9 @@ class AutoPassAd:
             if clean_word:
                 similarity = fuzz.ratio(clean_word, self.target_word)
                 if similarity >= self.similarity_threshold:
-                    print(f"\t\tFound match: '{clean_word}' (similarity: {similarity}%)")
+                    print(
+                        f"\t\tFound match: '{clean_word}' (similarity: {similarity}%)"
+                    )
                     return True
 
         return False
@@ -306,7 +308,7 @@ def main():
 
             if tool.verbose:
                 iteration_time = time.time() - iteration_start
-                print(f"  Total iteration time: {iteration_time*1000:.2f}ms")
+                print(f"  Total iteration time: {iteration_time * 1000:.2f}ms")
 
             time.sleep(tool.interval)
     except KeyboardInterrupt:
