@@ -180,6 +180,7 @@ When you run the tool, it will print a message indicating which OCR engine is be
 - Verify Tesseract is installed: `which tesseract`
 - If not found, reinstall Tesseract
 - Try running with full path: `/usr/bin/tesseract --version`
+- On macos use homebrew to install tesseract: `brew install tesseract`
 
 **Windows:**
 - Ensure Tesseract is added to PATH (see Step 2.3 above)
