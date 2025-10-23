@@ -10,6 +10,7 @@ import sys
 from PIL import Image, ImageGrab
 from pynput import mouse
 import pytesseract
+import easyocr
 from rapidfuzz import fuzz
 import imagehash
 from collections import deque
@@ -40,8 +41,9 @@ class AutoPassAd:
         self.target_word = target_word.lower()
         self.mouse_controller = mouse.Controller()
         self.verbose = verbose
-        # Track which OCR engine to use (try legacy first, fall back to default if needed)
-        self.use_legacy_engine = True
+        # Track which OCR engine to use (try easyocr first, fall back to tesseract if needed)
+        self.use_easyocr = True
+        self.easyocr_reader = None  # Lazy initialization on first use
         # Store last 3 image hashes for duplicate detection (deque provides O(1) operations)
         self.recent_image_hashes = deque(maxlen=3)
 
@@ -71,14 +73,18 @@ class AutoPassAd:
         """
         Extract text from image using OCR with performance optimizations.
 
+        OCR engine selection:
+        - Try EasyOCR first (more accurate, GPU-accelerated if available)
+        - Fall back to Tesseract if EasyOCR fails or is unavailable
+
         Optimizations applied:
         - Skip blank images (low pixel variance)
         - Skip duplicate images using perceptual hashing
         - Convert to grayscale to reduce processing complexity
         - Apply binary threshold to simplify the image
-        - Use legacy OCR engine (--oem 0) for faster processing, with fallback to default
-        - Use single line PSM mode (--psm 7) since we're looking for a single word
-        - Whitelist only alphabetic characters to reduce recognition complexity
+        - For Tesseract: Use legacy OCR engine (--oem 0) for faster processing, with fallback to default
+        - For Tesseract: Use single line PSM mode (--psm 7) since we're looking for a single word
+        - For Tesseract: Whitelist only alphabetic characters to reduce recognition complexity
         """
         try:
             # Start timing preprocessing
@@ -120,52 +126,72 @@ class AutoPassAd:
             # Start timing OCR
             ocr_start = time.time()
 
-            # Select config based on which engine is available
-            # This flag is set once during the first OCR attempt
-            if self.use_legacy_engine:
-                # Try optimized config first (legacy engine is faster)
-                # --psm 7: Single line of text (faster than block analysis)
-                # --oem 0: Legacy engine (significantly faster than LSTM)
-                # -c tessedit_char_whitelist: Only recognize alphabetic characters
-                config = "--psm 7 --oem 0 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
+            # Try EasyOCR first (more accurate, GPU-accelerated if available)
+            if self.use_easyocr:
                 try:
-                    text = pytesseract.image_to_string(image, config=config)
+                    # Lazy initialization of EasyOCR reader on first use
+                    # This initialization is done once and reused for all subsequent calls
+                    if self.easyocr_reader is None:
+                        # Initialize with English language, GPU if available
+                        # verbose=False to suppress initialization messages
+                        self.easyocr_reader = easyocr.Reader(['en'], gpu=True, verbose=False)
+                    
+                    # Convert PIL image to numpy array for EasyOCR
+                    img_array = np.array(image)
+                    
+                    # EasyOCR returns list of (bbox, text, confidence) tuples
+                    # We only care about the text parts
+                    results = self.easyocr_reader.readtext(img_array, detail=0)
+                    
+                    # Combine all detected text into a single string
+                    text = ' '.join(results)
+                    
                     ocr_time = time.time() - ocr_start
                     if self.verbose:
-                        print(f"  OCR time: {ocr_time * 1000:.2f}ms")
+                        print(f"  OCR time (EasyOCR): {ocr_time * 1000:.2f}ms")
                     return text.strip(), current_hash
-                except Exception as legacy_error:
-                    # If legacy engine fails (not installed), fall back to default engine
-                    if (
-                        "legacy" in str(legacy_error).lower()
-                        or "oem" in str(legacy_error).lower()
-                    ):
-                        print(
-                            "Legacy engine not available, falling back to default engine..."
-                        )
-                        # Permanently switch to default engine for all future calls
-                        self.use_legacy_engine = False
-                        # Fallback config without --oem 0 (uses default engine)
-                        fallback_config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                        text = pytesseract.image_to_string(
-                            image, config=fallback_config
-                        )
-                        ocr_time = time.time() - ocr_start
-                        if self.verbose:
-                            print(f"  OCR time: {ocr_time * 1000:.2f}ms")
-                        return text.strip(), current_hash
-                    else:
-                        # Re-raise if it's a different error
-                        raise
-            else:
-                # Use default engine config (legacy engine not available)
-                config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    
+                except Exception as easyocr_error:
+                    # If EasyOCR fails (not installed, GPU issues, etc.), fall back to Tesseract
+                    print(f"EasyOCR failed ({easyocr_error}), falling back to Tesseract...")
+                    # Permanently switch to Tesseract for all future calls
+                    self.use_easyocr = False
+                    # Continue to Tesseract below
+            
+            # Use Tesseract (either as fallback or if EasyOCR was disabled)
+            # Try optimized config first (legacy engine is faster)
+            # --psm 7: Single line of text (faster than block analysis)
+            # --oem 0: Legacy engine (significantly faster than LSTM)
+            # -c tessedit_char_whitelist: Only recognize alphabetic characters
+            config = "--psm 7 --oem 0 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+            try:
                 text = pytesseract.image_to_string(image, config=config)
                 ocr_time = time.time() - ocr_start
                 if self.verbose:
-                    print(f"  OCR time: {ocr_time * 1000:.2f}ms")
+                    print(f"  OCR time (Tesseract): {ocr_time * 1000:.2f}ms")
                 return text.strip(), current_hash
+            except Exception as legacy_error:
+                # If legacy engine fails (not installed), fall back to default Tesseract engine
+                if (
+                    "legacy" in str(legacy_error).lower()
+                    or "oem" in str(legacy_error).lower()
+                ):
+                    print(
+                        "Tesseract legacy engine not available, using default engine..."
+                    )
+                    # Fallback config without --oem 0 (uses default engine)
+                    fallback_config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    text = pytesseract.image_to_string(
+                        image, config=fallback_config
+                    )
+                    ocr_time = time.time() - ocr_start
+                    if self.verbose:
+                        print(f"  OCR time (Tesseract): {ocr_time * 1000:.2f}ms")
+                    return text.strip(), current_hash
+                else:
+                    # Re-raise if it's a different error
+                    raise
         except Exception as e:
             print(f"Error extracting text: {e}")
             return "", None
