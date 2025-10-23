@@ -134,21 +134,29 @@ venv\Scripts\activate
 
 You should see `(venv)` in your command prompt when activated.
 
-### Step 4: Install Python Dependencies
+### Step 4: Install AutoPassAd
 
-With your virtual environment activated:
+With your virtual environment activated, you have several installation options depending on which OCR backend you want to use:
 
+**Option 1: Install with both OCR backends (Recommended)**
 ```bash
-pip install -r requirements.txt
+pip install -e .[all]
 ```
 
-### Step 5: (Optional) Install EasyOCR for Better Accuracy
-
-EasyOCR provides more accurate text recognition and can leverage GPU acceleration if available. It's optional but recommended:
-
+**Option 2: Install with pytesseract only (lighter weight)**
 ```bash
-pip install easyocr
+pip install -e .[pytesseract]
 ```
+
+**Option 3: Install with easyocr only (more accurate, GPU-accelerated)**
+```bash
+pip install -e .[easyocr]
+```
+
+**About OCR backends:**
+- **pytesseract**: Faster, lighter weight, requires tesseract binary (installed in Step 2)
+- **easyocr**: More accurate, GPU-accelerated when available, but heavier dependencies
+- **all**: Installs both backends (recommended) - tool will prefer easyocr but fall back to pytesseract
 
 **Note:** EasyOCR will download language models on first run (~100MB for English). If EasyOCR is not installed or fails to load, the tool will automatically fall back to using Tesseract OCR.
 
@@ -157,12 +165,12 @@ pip install easyocr
 - Without GPU, EasyOCR will still work but will be slower than Tesseract
 - The tool will automatically detect and use GPU if available
 
-### Step 6: Verify Installation
+### Step 5: Verify Installation
 
-Run a quick test to ensure everything is working:
+After installation, you can use the `autopassad` command directly:
 
 ```bash
-python autopassad.py --help
+autopassad --help
 ```
 
 You should see the help message without any errors.
@@ -194,7 +202,7 @@ When you run the tool, it will print a message indicating which OCR engine is be
 #### "No module named 'PIL'" or similar import errors
 
 - Ensure your virtual environment is activated
-- Reinstall dependencies: `pip install -r requirements.txt`
+- Reinstall the package: `pip install -e .[all]`
 - If still failing, try upgrading pip: `pip install --upgrade pip`
 
 #### Permission errors on macOS
@@ -222,30 +230,37 @@ deactivate
 
 ## Usage
 
+After installation via setup.py, you can use the `autopassad` command directly from anywhere in your terminal.
+
 ### Basic Usage
 ```bash
-python autopassad.py
+autopassad
 ```
 
 ### With Custom Parameters
 ```bash
 # Custom interval (2 seconds between screenshots)
-python autopassad.py --interval 2.0
+autopassad --interval 2.0
 
 # Custom rectangle size (100px vertical x 250px horizontal around cursor)
-python autopassad.py --rect-size 100x250
+autopassad --rect-size 100x250
 
 # Custom similarity threshold (90% match required)
-python autopassad.py --threshold 90
+autopassad --threshold 90
 
 # Custom target word
-python autopassad.py --target-word "next"
+autopassad --target-word "next"
 
 # Enable verbose output with timing information
-python autopassad.py --verbose
+autopassad --verbose
 
 # All parameters combined
-python autopassad.py --interval 0.5 --rect-size 50x200 --threshold 85 --target-word "continue" --verbose
+autopassad --interval 0.5 --rect-size 50x200 --threshold 85 --target-word "continue" --verbose
+```
+
+**Alternative:** If you haven't installed via setup.py, you can still run directly:
+```bash
+python autopassad.py --help
 ```
 
 ### Command Line Options
