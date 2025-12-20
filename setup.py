@@ -33,7 +33,7 @@ setup(
     long_description_content_type="text/markdown",
     author="fPHeQk7",
     url="https://github.com/thiswillbeyourgithub/autopassad",
-    license="GPL-v3",
+    license="AGPL-v3",
     # Use py_modules since this is a single-file module, not a package
     py_modules=["autopassad"],
     python_requires=">=3.13",
@@ -60,7 +60,6 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: End Users/Desktop",
-        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
